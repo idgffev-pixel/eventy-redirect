@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opening Eventy...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1A1D1F 0%, #2C2F33 100%);
+            color: #F8F9FA;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #00D945;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #ADB5BD;
+            margin-bottom: 24px;
+        }
+
+        .button {
+            display: inline-block;
+            background: #00D945;
+            color: #1A1D1F;
+            padding: 14px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 217, 69, 0.4);
+        }
+
+        .button.secondary {
+            background: transparent;
+            border: 2px solid #00D945;
+            color: #00D945;
+        }
+
+        .instructions {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .instructions h2 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: #F8F9FA;
+        }
+
+        .instructions ol {
+            text-align: left;
+            color: #ADB5BD;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .status {
+            font-size: 14px;
+            color: #6C757D;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🎉</div>
+        <h1>Opening Eventy App...</h1>
+        <p id="message">Attempting to open the Eventy app to reset your password.</p>
+
+        <div id="buttons">
+            <a href="#" id="openApp" class="button">Open Eventy App</a>
+        </div>
+
+        <div class="instructions">
+            <h2>App didn't open?</h2>
+            <ol>
+                <li>Make sure the Eventy app is installed on your device</li>
+                <li>Tap the "Open Eventy App" button above</li>
+                <li>If prompted, select "Eventy" to open the link</li>
+                <li>The app will open to the password reset screen</li>
+            </ol>
+        </div>
+
+        <p class="status" id="status">Redirecting automatically...</p>
+    </div>
+
+    <script>
+        // Extract hash parameters from URL
+        function getHashParams() {
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            return {
+                access_token: params.get('access_token'),
+                refresh_token: params.get('refresh_token'),
+                type: params.get('type')
+            };
+        }
+
+        // Build deep link URL
+        function buildDeepLink() {
+            const params = getHashParams();
+
+            // If we have tokens in the hash, include them
+            if (params.access_token && params.refresh_token) {
+                return `eventyapp://reset-password#access_token=${params.access_token}&refresh_token=${params.refresh_token}&type=${params.type || 'recovery'}`;
+            }
+
+            // Otherwise just use the base URL
+            return 'eventyapp://reset-password';
+        }
+
+        const deepLink = buildDeepLink();
+        const openAppBtn = document.getElementById('openApp');
+        const statusEl = document.getElementById('status');
+
+        // Set the button href
+        openAppBtn.href = deepLink;
+
+        // Try to open the app automatically
+        let attempts = 0;
+        function tryOpenApp() {
+            attempts++;
+
+            if (attempts > 1) {
+                statusEl.textContent = 'Tap the button above to open the app';
+                return;
+            }
+
+            // Try to open the app
+            window.location.href = deepLink;
+
+            // If still here after 2 seconds, the app didn't open
+            setTimeout(() => {
+                statusEl.textContent = 'App not detected. Please tap the button above.';
+                document.getElementById('message').textContent = 'Tap the button below to open the Eventy app and reset your password.';
+            }, 2000);
+        }
+
+        // Try to open automatically on page load
+        setTimeout(tryOpenApp, 500);
+
+        // Also try when button is clicked
+        openAppBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = deepLink;
+            statusEl.textContent = 'Opening app...';
+        });
+    </script>
+</body>
+</html>
