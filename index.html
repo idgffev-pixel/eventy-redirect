@@ -114,9 +114,9 @@
 </head>
 <body>
     <div class="container">
-        <div class="icon">🎉</div>
-        <h1>Opening Eventy App...</h1>
-        <p id="message">Attempting to open the Eventy app to reset your password.</p>
+        <div class="icon" id="icon">🎉</div>
+        <h1 id="title">Opening Eventy App...</h1>
+        <p id="message">Attempting to open the Eventy app.</p>
 
         <div id="buttons">
             <a href="#" id="openApp" class="button">Open Eventy App</a>
@@ -128,7 +128,7 @@
                 <li>Make sure the Eventy app is installed on your device</li>
                 <li>Tap the "Open Eventy App" button above</li>
                 <li>If prompted, select "Eventy" to open the link</li>
-                <li>The app will open to the password reset screen</li>
+                <li id="step4">The app will open automatically</li>
             </ol>
         </div>
 
@@ -147,17 +147,53 @@
             };
         }
 
-        // Build deep link URL
+        // Build deep link URL based on auth type
         function buildDeepLink() {
             const params = getHashParams();
+            const authType = params.type || 'recovery';
+
+            // Update UI based on auth type
+            updateUIForAuthType(authType);
 
             // If we have tokens in the hash, include them
             if (params.access_token && params.refresh_token) {
-                return `eventyapp://reset-password#access_token=${params.access_token}&refresh_token=${params.refresh_token}&type=${params.type || 'recovery'}`;
+                // Use different deep links for different auth types
+                if (authType === 'recovery') {
+                    // Password reset
+                    return `eventyapp://reset-password#access_token=${params.access_token}&refresh_token=${params.refresh_token}&type=${authType}`;
+                } else {
+                    // Email verification, email change, invite, etc.
+                    return `eventyapp://email-verified#access_token=${params.access_token}&refresh_token=${params.refresh_token}&type=${authType}`;
+                }
             }
 
-            // Otherwise just use the base URL
-            return 'eventyapp://reset-password';
+            // Fallback
+            return authType === 'recovery' ? 'eventyapp://reset-password' : 'eventyapp://email-verified';
+        }
+
+        // Update UI text based on auth type
+        function updateUIForAuthType(type) {
+            const iconEl = document.getElementById('icon');
+            const titleEl = document.getElementById('title');
+            const messageEl = document.getElementById('message');
+            const step4El = document.getElementById('step4');
+
+            if (type === 'recovery') {
+                iconEl.textContent = '🔑';
+                titleEl.textContent = 'Password Reset';
+                messageEl.textContent = 'Opening the Eventy app to reset your password.';
+                step4El.textContent = 'The app will open to the password reset screen';
+            } else if (type === 'signup') {
+                iconEl.textContent = '✅';
+                titleEl.textContent = 'Email Verified!';
+                messageEl.textContent = 'Your email has been verified. Opening the Eventy app.';
+                step4El.textContent = 'The app will log you in automatically';
+            } else {
+                iconEl.textContent = '🎉';
+                titleEl.textContent = 'Opening Eventy App...';
+                messageEl.textContent = 'Attempting to open the Eventy app.';
+                step4El.textContent = 'The app will open automatically';
+            }
         }
 
         const deepLink = buildDeepLink();
