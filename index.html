@@ -155,20 +155,14 @@
             // Update UI based on auth type
             updateUIForAuthType(authType);
 
-            // If we have tokens in the hash, include them
+            // Always use the same deep link path, just with different type parameter
+            // This prevents expo-router from trying to navigate to non-existent routes
             if (params.access_token && params.refresh_token) {
-                // Use different deep links for different auth types
-                if (authType === 'recovery') {
-                    // Password reset
-                    return `eventyapp://reset-password#access_token=${params.access_token}&refresh_token=${params.refresh_token}&type=${authType}`;
-                } else {
-                    // Email verification, email change, invite, etc.
-                    return `eventyapp://email-verified#access_token=${params.access_token}&refresh_token=${params.refresh_token}&type=${authType}`;
-                }
+                return `eventyapp://auth-callback#access_token=${params.access_token}&refresh_token=${params.refresh_token}&type=${authType}`;
             }
 
             // Fallback
-            return authType === 'recovery' ? 'eventyapp://reset-password' : 'eventyapp://email-verified';
+            return 'eventyapp://auth-callback';
         }
 
         // Update UI text based on auth type
